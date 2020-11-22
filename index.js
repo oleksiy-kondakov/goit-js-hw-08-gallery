@@ -6,10 +6,10 @@ const refs = {
   closeBtn: document.querySelector('.lightbox__button'),
   overlay: document.querySelector('.lightbox__overlay'),
 };
+let activeIndex;
+const galleryMarkupCreate = galleryItems.map(({ preview, original, description }, index) => setGalleryItem(preview, original, description, index)).join('');
 
-const galleryMarkupCreate = galleryItems.map(({ preview, original, description }) => setGalleryItem(preview, original, description)).join('');
-
-function setGalleryItem(preview, original, description) {
+function setGalleryItem(preview, original, description, index) {
     return `<li class="gallery__item">
   <a
     class="gallery__link"
@@ -19,6 +19,7 @@ function setGalleryItem(preview, original, description) {
       class="gallery__image"
       src="${preview}"
       data-source="${original}"
+      data-index = "${index}"
       alt="${description}"
     />
   </a>
@@ -34,19 +35,41 @@ function openImage(event) {
     refs.lightboxImg.src = event.target.dataset.source;
     refs.lightboxImg.alt = event.target.alt;
     openModal()
+    activeIndex = Number(event.target.dataset.index);
 }
 
 function openModal() {
-    refs.lightbox.classList.add('is-open')
+    window.addEventListener('keydown', onKeyPress);
+    refs.lightbox.classList.add('is-open');
 }
 
 function closeModal() {
     refs.lightbox.classList.remove('is-open')
-    // refs.closeBtn.removeEventListener('click', closeModal)
+    window.removeEventListener('keydown', onKeyPress);
     refs.lightboxImg.src = '';
     refs.lightboxImg.alt = '';
     
 }
 refs.gallery.addEventListener('click', openImage);
 refs.closeBtn.addEventListener('click', closeModal);
- 
+refs.overlay.addEventListener('click', overlayClickClose)
+
+function overlayClickClose(event) {
+  if (event.currentTarget === event.target) {
+    closeModal();
+  }
+}
+function onKeyPress(event) {
+    switch (event.code) {
+        case 'Escape': closeModal();
+            break;
+        case 'ArrowRight':
+            activeIndex + 1 === galleryItems.length ? (activeIndex = 0) : (activeIndex += 1);
+            refs.lightboxImg.src = galleryItems[activeIndex].original;
+            break;
+        case 'ArrowLeft':
+            activeIndex === 0 ? (activeIndex = galleryItems.length - 1) : (activeIndex -= 1);
+            refs.lightboxImg.src = galleryItems[activeIndex].original;
+            break;
+    }
+    }
